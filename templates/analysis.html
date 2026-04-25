@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analyse des rapports</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Analyse des rapports</h1>
+        <p>Total des rapports reçus : <strong>{{ total_reports }}</strong></p>
+
+        <div class="card">
+            <h2>Répartition par ville</h2>
+            {% if city_counts %}
+                <ul>
+                    {% for city, count in city_counts.items() %}
+                        <li><strong>{{ city }}</strong> : {{ count }} rapport(s)</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Aucun rapport n'a encore été envoyé.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Historique des rapports</h2>
+            {% if reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ville</th>
+                            <th>Problème</th>
+                            <th>Cause</th>
+                            <th>Solution</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                            <tr>
+                                <td>{{ report['city'] }}</td>
+                                <td>{{ report['problem_description'] }}</td>
+                                <td>{{ report['cause'] }}</td>
+                                <td>{{ report['solution'] }}</td>
+                                <td>{{ report['created_at'][:19].replace('T', ' ') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun rapport pour le moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="links">
+            <a href="/">Retour au formulaire</a>
+        </div>
+    </div>
+</body>
+</html>

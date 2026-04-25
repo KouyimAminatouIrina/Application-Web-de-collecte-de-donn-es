@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diagnostic du véhicule</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Diagnostic</h1>
+        <p>Merci pour votre signalement.</p>
+
+        <div class="card">
+            <h2>Résumé de votre demande</h2>
+            <p><strong>Nom :</strong> {{ name if name else 'Anonyme' }}</p>
+            <p><strong>Ville :</strong> {{ city }}</p>
+            <p><strong>Véhicule :</strong> {{ vehicle_model if vehicle_model else 'Non précisé' }}</p>
+            <p><strong>Problème :</strong> {{ problem_description }}</p>
+            <hr />
+            <p><strong>Cause probable :</strong> {{ cause }}</p>
+            <p><strong>Solutions proposées :</strong> {{ solution }}</p>
+        </div>
+
+        <div class="links">
+            <a href="/">Retour au formulaire</a>
+            <a href="/analysis">Voir l'analyse des rapports</a>
+        </div>
+    </div>
+</body>
+</html>
