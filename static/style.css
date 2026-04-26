@@ -50,6 +50,54 @@ button:hover {
     background: #1d4ed8;
 }
 
+.button {
+    display: inline-block;
+    padding: 1rem 1.4rem;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    background: #1d4ed8;
+}
+
+.button-secondary {
+    background: #475569;
+}
+
+.button-secondary:hover {
+    background: #334155;
+}
+
+.hero {
+    text-align: center;
+    padding: 1rem 0 1.5rem;
+}
+
+.hero h1 {
+    margin-bottom: 0.8rem;
+    font-size: 2.3rem;
+}
+
+.hero p {
+    color: #475569;
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.75;
+}
+
+.button-grid {
+    display: grid;
+    gap: 1rem;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+}
+
 .card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;

@@ -3,34 +3,29 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Collecte de problèmes de véhicules</title>
+    <title>MecZone - Bienvenue</title>
     <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
     <div class="container">
-        <h1>🔧 MecZone</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 1.5rem;">Signaler un problème avec votre véhicule</p>
-        <h2 style="font-size: 1.1rem; color: #333;">Décrivez votre problème</h2>
+        <div class="hero">
+            <h1>Bienvenue sur MecZone</h1>
+            <p>Un outil simple pour signaler les problèmes de véhicule, recevoir un diagnostic rapide, et consulter les tendances des signalements par ville.</p>
+            <div class="button-grid">
+                <a class="button" href="/report">Entrer des données</a>
+                <a class="button button-secondary" href="/analysis">Voir les données statistiques</a>
+            </div>
+        </div>
 
-
-        <form action="/submit" method="post">
-            <label for="name">Nom (optionnel)</label>
-            <input type="text" id="name" name="name" placeholder="Votre prénom" />
-
-            <label for="city">Ville</label>
-            <input type="text" id="city" name="city" placeholder="Ex : Paris" required />
-
-            <label for="vehicle_model">Modèle de véhicule</label>
-            <input type="text" id="vehicle_model" name="vehicle_model" placeholder="Ex : Renault Clio" />
-
-            <label for="problem_description">Description du problème</label>
-            <textarea id="problem_description" name="problem_description" rows="5" placeholder="Par exemple : Le moteur fait un bruit étrange au démarrage" required></textarea>
-
-            <button type="submit">Envoyer</button>
-        </form>
-
-        <div class="links">
-            <a href="/analysis">Voir l'analyse des rapports</a>
+        <div class="card">
+            <h2>À quoi sert ce site ?</h2>
+            <p>MecZone vous permet de :</p>
+            <ul>
+                <li>Décrire un problème rencontré sur votre véhicule</li>
+                <li>Obtenir une hypothèse de cause et des solutions possibles</li>
+                <li>Consulter les rapports déjà envoyés et les tendances par ville</li>
+            </ul>
+            <p>Choisissez une action pour commencer.</p>
         </div>
     </div>
 </body>

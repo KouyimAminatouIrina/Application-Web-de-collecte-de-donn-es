@@ -9,6 +9,10 @@ def register_routes(app):
     def index():
         return render_template("index.html")
 
+    @app.route("/report", methods=["GET"])
+    def report():
+        return render_template("report.html")
+
     @app.route("/submit", methods=["POST"])
     def submit():
         name = request.form.get("name", "Anonyme").strip()
