@@ -53,6 +53,9 @@
                                 <th>Corrélation (r)</th>
                                 <th>R²</th>
                                 <th>Nombre de véhicules</th>
+                                <th>Pente (slope)</th>
+                                <th>Ordonnée (intercept)</th>
+                                <th>Équation de régression</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -62,6 +65,9 @@
                                     <td>{{ data.r }}</td>
                                     <td>{{ data.r2 }}</td>
                                     <td>{{ data.count }}</td>
+                                    <td>{{ data.slope }}</td>
+                                    <td>{{ data.intercept }}</td>
+                                    <td>y = {{ data.slope }}x + {{ data.intercept }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -160,6 +166,9 @@
                             <th>Corrélation (r)</th>
                             <th>R²</th>
                             <th>Nombre de véhicules</th>
+                            <th>Pente (slope)</th>
+                            <th>Ordonnée (intercept)</th>
+                            <th>Équation de régression</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -169,6 +178,9 @@
                                 <td>{{ data.r }}</td>
                                 <td>{{ data.r2 }}</td>
                                 <td>{{ data.count }}</td>
+                                <td>{{ data.slope }}</td>
+                                <td>{{ data.intercept }}</td>
+                                <td>y = {{ data.slope }}x + {{ data.intercept }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

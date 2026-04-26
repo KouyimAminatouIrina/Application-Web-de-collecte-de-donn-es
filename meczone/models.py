@@ -167,23 +167,30 @@ def get_brand_correlations(city=None):
         reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL").fetchall()
     conn.close()
     
+    from collections import Counter
     brand_data = {}
     for report in reports:
         brand = report["vehicle_model"].split()[0] if report["vehicle_model"] else "Inconnu"
         year = report["vehicle_year"]
+        age = datetime.now().year - year
         if brand not in brand_data:
             brand_data[brand] = []
-        brand_data[brand].append(year)
+        brand_data[brand].append(age)
     
     correlations = {}
-    for brand, years in brand_data.items():
-        if len(years) > 1:
-            ages = [datetime.now().year - y for y in years]
-            problems = [age * 0.1 + np.random.normal(0, 0.5) for age in ages]
-            if len(ages) > 1:
-                corr = simple_correlation(ages, problems)
-                r_squared = corr ** 2
-                correlations[brand] = {"r": round(corr, 2), "r2": round(r_squared, 2), "count": len(years)}
+    for brand, ages in brand_data.items():
+        age_counts = Counter(ages)
+        x = list(age_counts.keys())
+        y = list(age_counts.values())
+        if len(x) > 1:
+            corr = simple_correlation(x, y)
+            r_squared = corr ** 2
+            # Linear regression
+            if len(x) > 1:
+                slope, intercept = np.polyfit(x, y, 1)
+            else:
+                slope, intercept = 0, 0
+            correlations[brand] = {"r": round(corr, 2), "r2": round(r_squared, 2), "count": len(ages), "slope": round(slope, 2), "intercept": round(intercept, 2)}
     
     return correlations
 
