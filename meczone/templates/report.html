@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MecZone - Entrer un signalement</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Entrer un signalement</h1>
+        <p>Décrivez le problème de votre véhicule pour obtenir une aide rapide.</p>
+
+        <form action="/submit" method="post">
+            <label for="name">Nom (optionnel)</label>
+            <input type="text" id="name" name="name" placeholder="Votre prénom" />
+
+            <label for="city">Ville</label>
+            <input type="text" id="city" name="city" placeholder="Ex : Paris" required />
+
+            <label for="vehicle_model">Modèle de véhicule</label>
+            <input type="text" id="vehicle_model" name="vehicle_model" placeholder="Ex : Renault Clio" />
+
+            <label for="vehicle_year">Année du véhicule</label>
+            <input type="text" id="vehicle_year" name="vehicle_year" placeholder="Ex : 2018" required />
+
+            <label for="problem_description">Description du problème</label>
+            <textarea id="problem_description" name="problem_description" rows="5" placeholder="Par exemple : Le moteur fait un bruit étrange au démarrage" required></textarea>
+
+            <button type="submit">Envoyer</button>
+        </form>
+
+        <div class="links">
+            <a href="/">Retour à l'accueil</a>
+            <a href="/analysis">Voir les statistiques</a>
+        </div>
+    </div>
+</body>
+</html>
