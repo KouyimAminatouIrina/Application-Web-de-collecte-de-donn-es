@@ -1,6 +1,6 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #007A5E 0%, #CE1126 100%);
     color: #333;
     margin: 0;
     padding: 0;
@@ -32,7 +32,7 @@ body {
 
 h1 {
     margin-top: 0;
-    color: #1e293b;
+    color: #CE1126;
     font-size: 2.5rem;
     font-weight: 700;
 }
@@ -56,8 +56,8 @@ input[type="text"], textarea {
 
 input[type="text"]:focus, textarea:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #007A5E;
+    box-shadow: 0 0 0 3px rgba(0, 122, 94, 0.1);
 }
 
 button {
@@ -65,7 +65,7 @@ button {
     padding: 1rem 1.8rem;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #CE1126 0%, #a80820 100%);
     color: #fff;
     font-size: 1.1rem;
     font-weight: 600;
@@ -75,14 +75,14 @@ button {
 
 button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 8px 25px rgba(206, 17, 38, 0.3);
 }
 
 .button {
     display: inline-block;
     padding: 1.2rem 2rem;
     border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #CE1126 0%, #a80820 100%);
     color: #fff;
     text-decoration: none;
     font-weight: 700;
@@ -93,27 +93,33 @@ button:hover {
 
 .button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 10px 30px rgba(206, 17, 38, 0.4);
 }
 
 .button-secondary {
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    background: linear-gradient(135deg, #007A5E 0%, #005a47 100%);
 }
 
 .button-secondary:hover {
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-    box-shadow: 0 10px 30px rgba(71, 85, 105, 0.4);
+    background: linear-gradient(135deg, #005a47 0%, #003a2d 100%);
+    box-shadow: 0 10px 30px rgba(0, 122, 94, 0.4);
 }
 
 .hero {
-    text-align: center;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
     padding: 2rem 0 2.5rem;
     position: relative;
 }
 
-.illustration {
-    margin-bottom: 1.5rem;
+.hero-logo {
+    flex-shrink: 0;
     animation: bounceIn 1s ease-out;
+}
+
+.hero-content {
+    flex: 1;
 }
 
 @keyframes bounceIn {
@@ -136,28 +142,23 @@ button:hover {
 
 .hero h1 {
     margin-bottom: 1rem;
-    font-size: 3rem;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    margin-top: 0;
+    font-size: 2.8rem;
+    color: #CE1126;
 }
 
 .hero p {
-    color: #64748b;
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
+    color: #475569;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
     line-height: 1.8;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .button-grid {
-    display: grid;
+    display: flex;
     gap: 1.5rem;
-    justify-content: center;
-    grid-template-columns: repeat(auto-fit, minmax(250px, max-content));
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .card {
@@ -175,7 +176,7 @@ button:hover {
 }
 
 .card h2 {
-    color: #1e293b;
+    color: #CE1126;
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
@@ -209,14 +210,14 @@ table td {
 .links a {
     display: inline-block;
     margin-right: 1.5rem;
-    color: #2563eb;
+    color: #CE1126;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .links a:hover {
-    color: #1d4ed8;
+    color: #007A5E;
     text-decoration: underline;
 }
 
