@@ -9,8 +9,24 @@
 <body>
     <div class="container">
         <div class="hero">
+            <div class="illustration">
+                <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Car body -->
+                    <rect x="20" y="40" width="80" height="25" rx="5" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+                    <!-- Car roof -->
+                    <rect x="30" y="25" width="60" height="20" rx="3" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+                    <!-- Wheels -->
+                    <circle cx="35" cy="65" r="8" fill="#1f2937" stroke="#111827" stroke-width="2"/>
+                    <circle cx="85" cy="65" r="8" fill="#1f2937" stroke="#111827" stroke-width="2"/>
+                    <!-- Wrench -->
+                    <g transform="translate(10,10)">
+                        <rect x="0" y="5" width="15" height="3" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+                        <rect x="5" y="0" width="3" height="15" fill="#f59e0b" stroke="#d97706" stroke-width="1"/>
+                    </g>
+                </svg>
+            </div>
             <h1>Bienvenue sur MecZone</h1>
-            <p>Un outil simple pour signaler un problème de véhicule, obtenir une aide rapide et consulter les tendances des signalements par ville.</p>
+            <p>Un outil simple et intuitif pour signaler les problèmes de votre véhicule, obtenir des diagnostics rapides et explorer les tendances des pannes par région.</p>
             <div class="button-grid">
                 <a class="button" href="/report">Entrer des données</a>
                 <a class="button button-secondary" href="/analysis">Voir les données statistiques</a>
@@ -18,14 +34,14 @@
         </div>
 
         <div class="card">
-            <h2>À quoi sert ce site ?</h2>
-            <p>MecZone vous permet de :</p>
+            <h2>À quoi sert MecZone ?</h2>
+            <p>MecZone est votre assistant mécanique numérique :</p>
             <ul>
-                <li>Décrire un problème rencontré sur votre véhicule</li>
-                <li>Obtenir une hypothèse de cause et une solution possible</li>
-                <li>Analyser les signalements reçus par ville et nationalement</li>
+                <li><strong>Signalement facile :</strong> Décrivez simplement votre problème</li>
+                <li><strong>Diagnostic instantané :</strong> Recevez des causes probables et solutions</li>
+                <li><strong>Analyse communautaire :</strong> Découvrez les tendances par ville et marques</li>
             </ul>
-            <p>Choisissez une action pour commencer.</p>
+            <p>Commencez dès maintenant en choisissant une action ci-dessous.</p>
         </div>
     </div>
 </body>
