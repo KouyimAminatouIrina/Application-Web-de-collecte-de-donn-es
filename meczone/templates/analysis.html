@@ -31,6 +31,8 @@
                     <thead>
                         <tr>
                             <th>Ville</th>
+                            <th>Véhicule</th>
+                            <th>Année</th>
                             <th>Problème</th>
                             <th>Cause</th>
                             <th>Solution</th>
@@ -41,6 +43,8 @@
                         {% for report in reports %}
                             <tr>
                                 <td>{{ report['city'] }}</td>
+                                <td>{{ report['vehicle_model'] if report['vehicle_model'] else '-' }}</td>
+                                <td>{{ report['vehicle_year'] if report['vehicle_year'] else '-' }}</td>
                                 <td>{{ report['problem_description'] }}</td>
                                 <td>{{ report['cause'] }}</td>
                                 <td>{{ report['solution'] }}</td>

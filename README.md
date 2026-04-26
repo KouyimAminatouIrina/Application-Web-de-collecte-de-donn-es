@@ -1,6 +1,6 @@
-# Application Web de Collecte et Analyse des Problèmes de Véhicules
+# MecZone - Application Web de Collecte et Analyse des Problèmes de Véhicules
 
-Ce projet est une application Flask pour collecter les problèmes rencontrés par les utilisateurs de véhicules, localisés par ville, et proposer des causes et solutions.
+MecZone est une application Flask pour collecter les problèmes rencontrés par les utilisateurs de véhicules, localisés par ville, et proposer automatiquement des causes et solutions.
 
 ## Fonctionnalités
 
@@ -39,5 +39,7 @@ Ce projet est une application Flask pour collecter les problèmes rencontrés pa
    ```bash
    gunicorn app:app
    ```
+
+Render transmet le port de l’application via la variable d’environnement `PORT`. L’application utilise `0.0.0.0` et lit `PORT` dans `app.py`, donc elle fonctionne correctement sur Render.
 
 Render détectera automatiquement le `Procfile`.

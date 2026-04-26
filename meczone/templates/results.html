@@ -15,7 +15,7 @@
             <h2>Résumé de votre demande</h2>
             <p><strong>Nom :</strong> {{ name if name else 'Anonyme' }}</p>
             <p><strong>Ville :</strong> {{ city }}</p>
-            <p><strong>Véhicule :</strong> {{ vehicle_model if vehicle_model else 'Non précisé' }}</p>
+            <p><strong>Véhicule :</strong> {{ vehicle_model if vehicle_model else 'Non précisé' }} {% if vehicle_year %}({{ vehicle_year }}){% endif %}</p>
             <p><strong>Problème :</strong> {{ problem_description }}</p>
             <hr />
             <p><strong>Cause probable :</strong> {{ cause }}</p>
