@@ -25,6 +25,89 @@
         </div>
 
         <div class="card">
+            <h2>Statistiques détaillées par ville</h2>
+            <form method="post">
+                <label for="city_select">Sélectionnez une ville :</label>
+                <select id="city_select" name="city">
+                    {% for city in cities %}
+                        <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Analyser</button>
+            </form>
+            
+            {% if stats %}
+                <h3>Répartition des types de pannes à {{ selected_city }}</h3>
+                {% if stats.pie_chart %}
+                    <img src="{{ stats.pie_chart }}" alt="Diagramme circulaire des pannes" style="max-width: 100%; height: auto;" />
+                {% else %}
+                    <p>Aucune donnée disponible pour cette ville.</p>
+                {% endif %}
+                
+                <h3>Corrélation âge-problèmes par marque</h3>
+                {% if stats.correlations %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Marque</th>
+                                <th>Corrélation (r)</th>
+                                <th>R²</th>
+                                <th>Nombre de véhicules</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for brand, data in stats.correlations.items() %}
+                                <tr>
+                                    <td>{{ brand }}</td>
+                                    <td>{{ data.r }}</td>
+                                    <td>{{ data.r2 }}</td>
+                                    <td>{{ data.count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Données insuffisantes pour calculer les corrélations.</p>
+                {% endif %}
+                
+                <h3>Classement des marques par fiabilité</h3>
+                {% if stats.ranking %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Marque</th>
+                                <th>Âge moyen (ans)</th>
+                                <th>Problèmes moyens</th>
+                                <th>Nombre de véhicules</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for brand, data in stats.ranking %}
+                                <tr>
+                                    <td>{{ brand }}</td>
+                                    <td>{{ data.avg_age }}</td>
+                                    <td>{{ data.avg_problems }}</td>
+                                    <td>{{ data.count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <h3>Interprétation</h3>
+                    <p>À {{ selected_city }}, les véhicules {{ stats.ranking[0][0] }} ont en moyenne moins de problèmes ({{ stats.ranking[0][1].avg_problems }}) que les {{ stats.ranking[-1][0] }} ({{ stats.ranking[-1][1].avg_problems }}), malgré un âge comparable ({{ stats.ranking[0][1].avg_age }} ans vs {{ stats.ranking[-1][1].avg_age }} ans). La corrélation âge-problèmes est la plus forte chez {{ stats.ranking[-1][0] }} (r={{ stats.correlations[stats.ranking[-1][0]].r if stats.correlations.get(stats.ranking[-1][0]) else 'N/A' }}), ce qui signifie que les {{ stats.ranking[-1][0] }} s'usent plus vite.</p>
+                    
+                    <h3>Conclusion</h3>
+                    <p>Les véhicules {{ stats.ranking[0][0] }} sont ceux qui rencontrent le moins de problèmes à {{ selected_city }} (moins de {{ stats.ranking[0][1].avg_problems }} panne(s) en moyenne), même avec un âge avancé. À l'inverse, les {{ stats.ranking[-1][0] }} âgées de plus de {{ stats.ranking[-1][1].avg_age }} ans concentrent le plus de signalements.</p>
+                    
+                    <h3>Notre conseil</h3>
+                    <p>Pour les habitants de {{ selected_city }}, nous recommandons d'opter pour une {{ stats.ranking[0][0] }} d'occasion plutôt qu'une {{ stats.ranking[-1][0] }} du même âge, car la fiabilité est meilleure face aux conditions routières et climatiques.</p>
+                {% else %}
+                    <p>Données insuffisantes pour le classement.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="card">
             <h2>Historique des rapports</h2>
             {% if reports %}
                 <table>

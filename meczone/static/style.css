@@ -26,10 +26,10 @@ label {
     font-weight: 600;
 }
 
-input[type="text"], textarea {
-    width: 100%;
-    padding: 0.9rem;
-    margin-top: 0.4rem;
+select {
+    width: auto;
+    padding: 0.5rem;
+    margin-left: 0.5rem;
     border: 1px solid #cbd2d9;
     border-radius: 8px;
     font-size: 1rem;
