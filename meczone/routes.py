@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for
-from meczone.models import diagnose_problem, save_report, get_all_reports, get_city_stats, get_city_list, get_city_analytics, get_national_analytics
+from meczone.models import diagnose_problem, save_report, get_all_reports, get_city_stats, get_city_list, get_city_analytics, get_national_analytics, get_garages_by_city
 
 
 def register_routes(app):
@@ -26,6 +26,8 @@ def register_routes(app):
 
         cause, solution = diagnose_problem(problem_description)
         save_report(name, city, vehicle_model, vehicle_year, problem_description, cause, solution)
+        
+        garages = get_garages_by_city(city)
 
         return render_template(
             "results.html",
@@ -35,7 +37,8 @@ def register_routes(app):
             vehicle_year=vehicle_year,
             problem_description=problem_description,
             cause=cause,
-            solution=solution
+            solution=solution,
+            garages=garages
         )
 
     @app.route("/analysis", methods=["GET", "POST"])

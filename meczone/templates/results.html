@@ -22,6 +22,18 @@
             <p><strong>Solutions proposées :</strong> {{ solution }}</p>
         </div>
 
+        {% if garages %}
+        <div class="card">
+            <h2>Garages recommandés à {{ city }}</h2>
+            <p>Voici une liste de garages dans votre ville où vous pouvez contacter pour réparer votre véhicule :</p>
+            <ul>
+                {% for garage in garages %}
+                    <li><strong>{{ garage.name }}</strong> – {{ garage.location }} | ☎️ {{ garage.phone }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <div class="links">
             <a href="/report">Entrer de nouvelles données</a>
             <a href="/analysis">Voir l'analyse des rapports</a>
