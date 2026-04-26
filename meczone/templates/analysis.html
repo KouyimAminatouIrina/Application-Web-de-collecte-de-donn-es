@@ -141,6 +141,75 @@
             {% endif %}
         </div>
 
+        <div class="card">
+            <h2>📊 Analyse générale - Niveau national</h2>
+            
+            <h3>Répartition des types de pannes (Tout le pays)</h3>
+            {% if national_stats.pie_chart %}
+                <img src="{{ national_stats.pie_chart }}" alt="Diagramme circulaire national" style="max-width: 100%; height: auto;" />
+            {% else %}
+                <p>Aucune donnée disponible.</p>
+            {% endif %}
+            
+            <h3>Corrélation âge-problèmes par marque (National)</h3>
+            {% if national_stats.correlations %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Marque</th>
+                            <th>Corrélation (r)</th>
+                            <th>R²</th>
+                            <th>Nombre de véhicules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for brand, data in national_stats.correlations.items() %}
+                            <tr>
+                                <td>{{ brand }}</td>
+                                <td>{{ data.r }}</td>
+                                <td>{{ data.r2 }}</td>
+                                <td>{{ data.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Données insuffisantes pour calculer les corrélations.</p>
+            {% endif %}
+            
+            <h3>Classement des marques par fiabilité (National)</h3>
+            {% if national_stats.ranking %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Marque</th>
+                            <th>Âge moyen (ans)</th>
+                            <th>Problèmes moyens</th>
+                            <th>Nombre de véhicules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for brand, data in national_stats.ranking %}
+                            <tr>
+                                <td>{{ brand }}</td>
+                                <td>{{ data.avg_age }}</td>
+                                <td>{{ data.avg_problems }}</td>
+                                <td>{{ data.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <h3>Conclusion - Classement national des marques</h3>
+                <p>Au niveau national, les véhicules {{ national_stats.ranking[0][0] }} rencontrent le moins de problèmes ({{ national_stats.ranking[0][1].avg_problems }} en moyenne), tandis que les {{ national_stats.ranking[-1][0] }} en reportent le plus ({{ national_stats.ranking[-1][1].avg_problems }} en moyenne).</p>
+                
+                <h3>Recommandation générale</h3>
+                <p>Pour une meilleure fiabilité toutes régions confondues, nous recommandons les marques {{ national_stats.ranking[0][0] }}, qui affichent une excellente tenue mécanique face aux conditions variées sur l'ensemble du territoire.</p>
+            {% else %}
+                <p>Données insuffisantes pour le classement national.</p>
+            {% endif %}
+        </div>
+
         <div class="links">
             <a href="/">Retour au formulaire</a>
         </div>

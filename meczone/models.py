@@ -86,6 +86,11 @@ def diagnose_problem(description):
 def save_report(name, city, vehicle_model, vehicle_year, problem_description, cause, solution):
     """Enregistre un rapport de problème dans la base de données."""
     created_at = datetime.utcnow().isoformat()
+    try:
+        vehicle_year = int(vehicle_year) if vehicle_year else None
+    except (ValueError, TypeError):
+        vehicle_year = None
+    
     conn = get_db_connection()
     conn.execute(
         "INSERT INTO reports (name, city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -153,10 +158,13 @@ def get_problem_distribution(city):
     return distribution
 
 
-def get_brand_correlations(city):
-    """Calcule corrélation âge-problèmes par marque pour une ville."""
+def get_brand_correlations(city=None):
+    """Calcule corrélation âge-problèmes par marque pour une ville ou national."""
     conn = get_db_connection()
-    reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+    if city:
+        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+    else:
+        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL").fetchall()
     conn.close()
     
     brand_data = {}
@@ -170,21 +178,23 @@ def get_brand_correlations(city):
     correlations = {}
     for brand, years in brand_data.items():
         if len(years) > 1:
-            # Simuler nombre de problèmes par âge (plus vieux = plus de problèmes)
             ages = [datetime.now().year - y for y in years]
-            problems = [age * 0.1 + np.random.normal(0, 0.5) for age in ages]  # Simulation simple
+            problems = [age * 0.1 + np.random.normal(0, 0.5) for age in ages]
             if len(ages) > 1:
-                corr, p_value = stats.pearsonr(ages, problems)
+                corr = simple_correlation(ages, problems)
                 r_squared = corr ** 2
                 correlations[brand] = {"r": round(corr, 2), "r2": round(r_squared, 2), "count": len(years)}
     
     return correlations
 
 
-def get_brand_ranking(city):
+def get_brand_ranking(city=None):
     """Classement des marques par moyenne de problèmes par tranche d'âge."""
     conn = get_db_connection()
-    reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+    if city:
+        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+    else:
+        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL").fetchall()
     conn.close()
     
     brand_groups = {}
@@ -194,7 +204,6 @@ def get_brand_ranking(city):
         if brand not in brand_groups:
             brand_groups[brand] = {"ages": [], "problems": []}
         brand_groups[brand]["ages"].append(age)
-        # Simulation: problèmes = âge * facteur + bruit
         problems = age * 0.15 + np.random.normal(0, 1)
         brand_groups[brand]["problems"].append(problems)
     
@@ -205,7 +214,6 @@ def get_brand_ranking(city):
             avg_problems = np.mean(data["problems"])
             ranking[brand] = {"avg_age": round(avg_age, 1), "avg_problems": round(avg_problems, 1), "count": len(data["ages"])}
     
-    # Trier par moyenne de problèmes croissante
     sorted_ranking = sorted(ranking.items(), key=lambda x: x[1]["avg_problems"])
     return sorted_ranking
 
@@ -232,7 +240,29 @@ def generate_pie_chart(distribution):
     return f"data:image/png;base64,{image_base64}"
 
 
-def get_city_stats(city):
+def get_city_stats():
+    """Retourne le compte des rapports par ville."""
+    conn = get_db_connection()
+    reports = conn.execute("SELECT city FROM reports").fetchall()
+    conn.close()
+    
+    city_counts = {}
+    for report in reports:
+        city_name = report["city"]
+        city_counts[city_name] = city_counts.get(city_name, 0) + 1
+    
+    return city_counts
+
+
+def get_city_list():
+    """Récupère la liste des villes disponibles."""
+    conn = get_db_connection()
+    cities = conn.execute("SELECT DISTINCT city FROM reports ORDER BY city").fetchall()
+    conn.close()
+    return [row["city"] for row in cities]
+
+
+def get_city_analytics(city):
     """Retourne toutes les statistiques pour une ville."""
     distribution = get_problem_distribution(city)
     correlations = get_brand_correlations(city)
@@ -247,9 +277,24 @@ def get_city_stats(city):
     }
 
 
-def get_city_list():
-    """Récupère la liste des villes disponibles."""
+def get_national_analytics():
+    """Retourne les statistiques générales pour tout le pays."""
     conn = get_db_connection()
-    cities = conn.execute("SELECT DISTINCT city FROM reports ORDER BY city").fetchall()
+    all_reports = conn.execute("SELECT problem_description, city FROM reports").fetchall()
     conn.close()
-    return [row["city"] for row in cities]
+    
+    distribution = {}
+    for report in all_reports:
+        problem_type = get_problem_type(report["problem_description"])
+        distribution[problem_type] = distribution.get(problem_type, 0) + 1
+    
+    correlations = get_brand_correlations()
+    ranking = get_brand_ranking()
+    pie_chart = generate_pie_chart(distribution)
+    
+    return {
+        "distribution": distribution,
+        "correlations": correlations,
+        "ranking": ranking,
+        "pie_chart": pie_chart
+    }
