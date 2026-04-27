@@ -1,11 +1,19 @@
-import sqlite3
+import os
 from datetime import datetime
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 import base64
+from collections import Counter
 
-DB_PATH = "data.db"
+import psycopg2
+import psycopg2.extras
+
+# URL de connexion PostgreSQL — lue depuis la variable d'environnement
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
 
 PROBLEM_DIAGNOSES = [
     {
@@ -47,17 +55,18 @@ GENERIC_DIAGNOSIS = {
 
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    """Retourne une connexion PostgreSQL."""
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 
 def init_db():
+    """Crée la table si elle n'existe pas encore."""
     conn = get_db_connection()
-    conn.execute(
-        """
+    cur = conn.cursor()
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT,
             city TEXT,
             vehicle_model TEXT,
@@ -67,9 +76,9 @@ def init_db():
             solution TEXT,
             created_at TEXT
         )
-        """
-    )
+    """)
     conn.commit()
+    cur.close()
     conn.close()
 
 
@@ -90,20 +99,25 @@ def save_report(name, city, vehicle_model, vehicle_year, problem_description, ca
         vehicle_year = int(vehicle_year) if vehicle_year else None
     except (ValueError, TypeError):
         vehicle_year = None
-    
+
     conn = get_db_connection()
-    conn.execute(
-        "INSERT INTO reports (name, city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO reports (name, city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         (name, city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at)
     )
     conn.commit()
+    cur.close()
     conn.close()
 
 
 def get_all_reports():
     """Récupère tous les rapports de la base de données."""
     conn = get_db_connection()
-    reports = conn.execute("SELECT city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at FROM reports ORDER BY created_at DESC").fetchall()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT city, vehicle_model, vehicle_year, problem_description, cause, solution, created_at FROM reports ORDER BY created_at DESC")
+    reports = cur.fetchall()
+    cur.close()
     conn.close()
     return reports
 
@@ -135,10 +149,10 @@ def simple_correlation(x, y):
     sum_xy = sum(xi * yi for xi, yi in zip(x, y))
     sum_x2 = sum(xi ** 2 for xi in x)
     sum_y2 = sum(yi ** 2 for yi in y)
-    
+
     numerator = n * sum_xy - sum_x * sum_y
     denominator = ((n * sum_x2 - sum_x ** 2) * (n * sum_y2 - sum_y ** 2)) ** 0.5
-    
+
     if denominator == 0:
         return 0.0
     return numerator / denominator
@@ -147,27 +161,32 @@ def simple_correlation(x, y):
 def get_problem_distribution(city):
     """Retourne la distribution des types de problèmes pour une ville."""
     conn = get_db_connection()
-    reports = conn.execute("SELECT problem_description FROM reports WHERE city = ?", (city,)).fetchall()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT problem_description FROM reports WHERE city = %s", (city,))
+    reports = cur.fetchall()
+    cur.close()
     conn.close()
-    
+
     distribution = {}
     for report in reports:
         problem_type = get_problem_type(report["problem_description"])
         distribution[problem_type] = distribution.get(problem_type, 0) + 1
-    
+
     return distribution
 
 
 def get_brand_correlations(city=None):
     """Calcule corrélation âge-problèmes par marque pour une ville ou national."""
     conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     if city:
-        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+        cur.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = %s AND vehicle_year IS NOT NULL", (city,))
     else:
-        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL").fetchall()
+        cur.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL")
+    reports = cur.fetchall()
+    cur.close()
     conn.close()
-    
-    from collections import Counter
+
     brand_data = {}
     for report in reports:
         brand = report["vehicle_model"].split()[0] if report["vehicle_model"] else "Inconnu"
@@ -176,7 +195,7 @@ def get_brand_correlations(city=None):
         if brand not in brand_data:
             brand_data[brand] = []
         brand_data[brand].append(age)
-    
+
     correlations = {}
     for brand, ages in brand_data.items():
         age_counts = Counter(ages)
@@ -185,25 +204,30 @@ def get_brand_correlations(city=None):
         if len(x) > 1:
             corr = simple_correlation(x, y)
             r_squared = corr ** 2
-            # Linear regression
-            if len(x) > 1:
-                slope, intercept = np.polyfit(x, y, 1)
-            else:
-                slope, intercept = 0, 0
-            correlations[brand] = {"r": round(corr, 2), "r2": round(r_squared, 2), "count": len(ages), "slope": round(slope, 2), "intercept": round(intercept, 2)}
-    
+            slope, intercept = np.polyfit(x, y, 1)
+            correlations[brand] = {
+                "r": round(corr, 2),
+                "r2": round(r_squared, 2),
+                "count": len(ages),
+                "slope": round(slope, 2),
+                "intercept": round(intercept, 2)
+            }
+
     return correlations
 
 
 def get_brand_ranking(city=None):
     """Classement des marques par moyenne de problèmes par tranche d'âge."""
     conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     if city:
-        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = ? AND vehicle_year IS NOT NULL", (city,)).fetchall()
+        cur.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE city = %s AND vehicle_year IS NOT NULL", (city,))
     else:
-        reports = conn.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL").fetchall()
+        cur.execute("SELECT vehicle_model, vehicle_year FROM reports WHERE vehicle_year IS NOT NULL")
+    reports = cur.fetchall()
+    cur.close()
     conn.close()
-    
+
     brand_groups = {}
     for report in reports:
         brand = report["vehicle_model"].split()[0] if report["vehicle_model"] else "Inconnu"
@@ -213,14 +237,18 @@ def get_brand_ranking(city=None):
         brand_groups[brand]["ages"].append(age)
         problems = age * 0.15 + np.random.normal(0, 1)
         brand_groups[brand]["problems"].append(problems)
-    
+
     ranking = {}
     for brand, data in brand_groups.items():
         if data["ages"]:
             avg_age = np.mean(data["ages"])
             avg_problems = np.mean(data["problems"])
-            ranking[brand] = {"avg_age": round(avg_age, 1), "avg_problems": round(avg_problems, 1), "count": len(data["ages"])}
-    
+            ranking[brand] = {
+                "avg_age": round(avg_age, 1),
+                "avg_problems": round(avg_problems, 1),
+                "count": len(data["ages"])
+            }
+
     sorted_ranking = sorted(ranking.items(), key=lambda x: x[1]["avg_problems"])
     return sorted_ranking
 
@@ -229,44 +257,50 @@ def generate_pie_chart(distribution):
     """Génère un diagramme circulaire en base64."""
     if not distribution:
         return None
-    
+
     labels = list(distribution.keys())
     sizes = list(distribution.values())
-    
+
     fig, ax = plt.subplots()
     ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
     ax.axis('equal')
-    
+
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
     buf.close()
     plt.close(fig)
-    
+
     return f"data:image/png;base64,{image_base64}"
 
 
 def get_city_stats():
     """Retourne le compte des rapports par ville."""
     conn = get_db_connection()
-    reports = conn.execute("SELECT city FROM reports").fetchall()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT city FROM reports")
+    reports = cur.fetchall()
+    cur.close()
     conn.close()
-    
+
     city_counts = {}
     for report in reports:
         city_name = report["city"]
         city_counts[city_name] = city_counts.get(city_name, 0) + 1
-    
+
     return city_counts
 
 
 def get_city_list():
     """Récupère la liste des villes disponibles."""
     conn = get_db_connection()
-    cities = conn.execute("SELECT DISTINCT city FROM reports ORDER BY city").fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT city FROM reports ORDER BY city")
+    cities = cur.fetchall()
+    cur.close()
     conn.close()
-    return [row["city"] for row in cities]
+    return [row[0] for row in cities]
 
 
 def get_city_analytics(city):
@@ -275,7 +309,33 @@ def get_city_analytics(city):
     correlations = get_brand_correlations(city)
     ranking = get_brand_ranking(city)
     pie_chart = generate_pie_chart(distribution)
-    
+
+    return {
+        "distribution": distribution,
+        "correlations": correlations,
+        "ranking": ranking,
+        "pie_chart": pie_chart
+    }
+
+
+def get_national_analytics():
+    """Retourne les statistiques nationales."""
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT problem_description FROM reports")
+    reports = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    distribution = {}
+    for report in reports:
+        problem_type = get_problem_type(report["problem_description"])
+        distribution[problem_type] = distribution.get(problem_type, 0) + 1
+
+    correlations = get_brand_correlations()
+    ranking = get_brand_ranking()
+    pie_chart = generate_pie_chart(distribution)
+
     return {
         "distribution": distribution,
         "correlations": correlations,
@@ -292,27 +352,17 @@ def get_garages_by_city(city):
             {"name": "Douala Auto Sarl", "location": "Quartier Bonaberi", "phone": "672 85 16 52 / 683 32 81 67"},
             {"name": "Garage Auto Location Express (GALE)", "location": "Quartier Bonapriso", "phone": "+237 696 97 39 00"},
             {"name": "Garage Flora", "location": "11 Rue Franqueville, Akwa", "phone": "233 43 06 22 / 699 93 47 19"},
-            {"name": "KIA MOTORS AUTO SA (KM AUTO SA)", "location": "Avenue de Gaulle Bonanjo & Zone Industrielle Bonaberi", "phone": "233 65 65 65 / 669 80 02 78"},
-            {"name": "GAP MOTORS", "location": "Axe Douala-Yaoundé après BOCOM", "phone": "694 57 90 80 / 677 13 20 88"},
+            {"name": "KIA MOTORS AUTO SA", "location": "Avenue de Gaulle Bonanjo & Zone Industrielle Bonaberi", "phone": "233 65 65 65"},
+            {"name": "GAP MOTORS", "location": "Axe Douala-Yaoundé après BOCOM", "phone": "694 57 90 80"},
             {"name": "AUTO HAUS", "location": "Face Polyclinique d'Akwa", "phone": "233 425 586"},
-            {"name": "AUTO STOP SARL", "location": "Douala Bali derrière SGC, Rue Bertaut", "phone": "699 88 75 37 / 653 05 06 18"},
             {"name": "Force Tyre Sarl", "location": "Route Base Navale Youpwé", "phone": "233 42 79 76"}
         ],
-        "Limbé": [
-            {"name": "DynaSet Garage (Victor Njoh)", "location": "Quartier New Town", "phone": "677 41 98 35"},
-            {"name": "HGS Garage Ltd", "location": "Ancienne Route Bonaberi, BP 1227", "phone": "654 22 24 55"},
-            {"name": "ETS BEN AUTO PARTS", "location": "Maligah", "phone": "677 94 75 75"},
-            {"name": "237mechanic", "location": "Limbé", "phone": "(contact en ligne)"},
-            {"name": "Confidence Garage", "location": "Limbé", "phone": "(contacter via annuaire)"},
-            {"name": "Auto Parts & Services with William Manga", "location": "Limbé", "phone": "(à confirmer)"}
-        ],
         "Yaoundé": [
-            {"name": "Garage Les Invincibles", "location": "Quartier Oyom Abang (à côté de l'école primaire Les Marguerites)", "phone": "681 50 49 18 / 659 31 11 12"},
-            {"name": "Centre Auto Cameroun SARL", "location": "Quartier Elig-Essono", "phone": "694 05 12 26 / 690 74 96 08"},
-            {"name": "Henri Garage 4x4 Officiel", "location": "Quartier Fouda, rue des Généraux", "phone": "675 06 73 29 / 691 50 95 78"},
-            {"name": "Garage AUTO Service sarl", "location": "Yaoundé", "phone": "698 91 69 38 / 680 57 70 14"},
-            {"name": "Exact Automobile", "location": "Terminus Mimboman", "phone": "680 07 54 29 / 675 38 17 22"},
-            {"name": "Garage GAMEL", "location": "Derrière Station Total, Yaoundé", "phone": "651 17 20 00"},
+            {"name": "Garage Les Invincibles", "location": "Quartier Oyom Abang", "phone": "681 50 49 18 / 659 31 11 12"},
+            {"name": "Centre Auto Cameroun SARL", "location": "Quartier Elig-Essono", "phone": "694 05 12 26"},
+            {"name": "Henri Garage 4x4 Officiel", "location": "Quartier Fouda, rue des Généraux", "phone": "675 06 73 29"},
+            {"name": "Exact Automobile", "location": "Terminus Mimboman", "phone": "680 07 54 29"},
+            {"name": "Garage GAMEL", "location": "Derrière Station Total", "phone": "651 17 20 00"},
             {"name": "Neptune Titi Garage", "location": "Yaoundé", "phone": "677 36 58 30"},
             {"name": "Tsague Auto", "location": "Yaoundé (spécialiste véhicules haut de gamme)", "phone": "674 80 13 21"}
         ],
@@ -320,45 +370,41 @@ def get_garages_by_city(city):
             {"name": "Maa Auto", "location": "Garoua", "phone": "694 67 87 89"},
             {"name": "Garoua Automobiles", "location": "Garoua", "phone": "658 68 09 41"},
             {"name": "Toyota CAMI - Garoua", "location": "Avenue des Banques, BP 336 Garoua", "phone": "222 27 30 71"},
-            {"name": "Force Tyre Garoua", "location": "Garoua", "phone": "(contact via pagesjaunes.online)"},
-            {"name": "YAMAHA Cameroun - Garoua", "location": "Garoua", "phone": "(contact via pagesjaunes.online)"},
             {"name": "Cami Equipment - Garoua", "location": "Garoua", "phone": "233 44 16 88"}
+        ],
+        "Bafoussam": [
+            {"name": "CITROËN CAMI", "location": "Quartier Bamendzi, route de Foumbot", "phone": "233 44 13 88"},
+            {"name": "Nongni Auto Group", "location": "Bafoussam", "phone": "695 32 66 99"},
+            {"name": "AD14 automobile (garage dyna)", "location": "Bafoussam", "phone": "653 07 96 13"}
+        ],
+        "Ngaoundéré": [
+            {"name": "Garage Abdel-hamid", "location": "Face entrée Gada mabaga, Joli Soir", "phone": "694 02 09 01"},
+            {"name": "Ngaoundere Automobiles", "location": "Ngaoundéré", "phone": "690 90 10 10"},
+            {"name": "Garage Auto Location Express (GALE)", "location": "Quartier Bidjoro", "phone": "696 97 39 00"},
+            {"name": "Force Tyre Ngaoundéré", "location": "Rue de la gare, face Hôtel Adamaoua", "phone": "698 80 80 80"}
+        ],
+        "Maroua": [
+            {"name": "Garage Centre Ville Auto 58", "location": "Rue 21, Centre Ville, Maroua", "phone": "687 27 27 05"},
+            {"name": "Centre Technique de Maroua", "location": "Maroua", "phone": "670 46 48 41"},
+            {"name": "OUMAROU HAMANWABI", "location": "Maroua, région de l'Extrême-Nord", "phone": "699 02 94 87"}
         ],
         "Ebolowa": [
             {"name": "Ebolowa Automobiles (Yamaha)", "location": "Ebolowa", "phone": "698 11 89 88"},
             {"name": "Garage automobile chez Modeste", "location": "Ebolowa", "phone": "697 55 02 14"},
             {"name": "Dépannage rapide Ebolowa", "location": "Descente de brasserie, Ebolowa", "phone": "686 94 92 53"}
         ],
-        "Bafoussam": [
-            {"name": "CITROËN CAMI", "location": "Quartier Bamendzi, route de Foumbot", "phone": "233 44 13 88"},
-            {"name": "Nongni Auto Group", "location": "Bafoussam", "phone": "695 32 66 99 / 650 23 77 92"},
-            {"name": "AD14 automobile (garage dyna)", "location": "Bafoussam", "phone": "653 07 96 13"}
-        ],
-        "Ngaoundéré": [
-            {"name": "Garage Abdel-hamid", "location": "Face entrée Gada mabaga, rue gare marchandise, Joli Soir", "phone": "694 02 09 01"},
-            {"name": "Ngaoundere Automobiles", "location": "Ngaoundéré", "phone": "690 90 10 10"},
-            {"name": "Garage Auto Location Express (GALE)", "location": "Quartier Bidjoro", "phone": "696 97 39 00 / 651 00 65 69"},
-            {"name": "GENERAL AUTO", "location": "Avenue des Banques, Ngaoundéré IIème", "phone": "(contact à vérifier)"},
-            {"name": "Force Tyre Ngaoundéré", "location": "Rue de la gare, face Hôtel Adamaoua", "phone": "698 80 80 80"},
-            {"name": "Complexe Garage Électrique et Électronique", "location": "Ngaoundéré", "phone": "699 00 00 00"},
-            {"name": "Centre Auto Pneumatique NGDERE", "location": "Ngaoundéré", "phone": "(appeler via annonce)"}
-        ],
-        "Maroua": [
-            {"name": "OUMAROU HAMANWABI", "location": "Maroua, région de l'Extrême-Nord", "phone": "699 02 94 87"},
-            {"name": "Garage Centre Ville Auto 58", "location": "Rue 21, Centre Ville, Maroua", "phone": "687 27 27 05"},
-            {"name": "Garage Centre Ville Auto 73", "location": "Rue 10, Centre Ville, Maroua", "phone": "(contact via expressmarketcm.com)"},
-            {"name": "Centre Technique de Maroua", "location": "Maroua", "phone": "670 46 48 41 / 696 98 26 75"},
-            {"name": "Garage Gony oumar", "location": "Maroua", "phone": "(contact sur listing.elidge.com)"}
+        "Limbé": [
+            {"name": "DynaSet Garage (Victor Njoh)", "location": "Quartier New Town", "phone": "677 41 98 35"},
+            {"name": "HGS Garage Ltd", "location": "Ancienne Route Bonaberi, BP 1227", "phone": "654 22 24 55"},
+            {"name": "ETS BEN AUTO PARTS", "location": "Maligah", "phone": "677 94 75 75"}
         ],
         "Buea": [
-            {"name": "Nimmo-Auto", "location": "B. Nash opposite Faculty of Health Science, University of Buea", "phone": "678 54 20 65"},
+            {"name": "Nimmo-Auto", "location": "B. Nash opposite Faculty of Health Science, UB", "phone": "678 54 20 65"},
             {"name": "Asanji Enterprise", "location": "Buea, région du Sud-Ouest", "phone": "675 61 15 23"},
-            {"name": "Blue Empire Cars & Real Estates", "location": "Buea", "phone": "674 88 46 86"},
-            {"name": "Alpha Engineering Group", "location": "BP 134 Buea", "phone": "692 27 16 11 / 677 72 54 88"},
-            {"name": "MTN Service Center Buea", "location": "Buea", "phone": "8787"}
+            {"name": "Alpha Engineering Group", "location": "BP 134 Buea", "phone": "692 27 16 11"}
         ]
     }
-    
+
     city_normalized = city.strip().lower()
     for key in garages:
         if key.lower() == city_normalized:
