@@ -1,38 +1,95 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Bienvenue</title>
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MecZone Cameroun — Accueil</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <div class="hero">
-            <div class="hero-logo">
-                <img src="/static/logo.svg" alt="Logo MecZone Cameroun" style="width: 220px; height: auto;">
-            </div>
-            <div class="hero-content">
-                <h1>Bienvenue sur MecZone Cameroun</h1>
-                <p>Cette application collecte les problèmes réels des conducteurs, les analyse, et vous propose des solutions concrètes.</p>
-                <p>Grâce à vos signalements, nous établissons des données statistiques. Notre objectif : vous dire quelles marques ont une plus grande chance de survie selon votre ville de résidence (Douala, Yaoundé, Garoua…).</p>
-                <div class="button-grid">
-                    <a class="button" href="/report">Entrer des données</a>
-                    <a class="button button-secondary" href="/analysis">Voir les données statistiques</a>
-                </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <h2>Comment ça marche ?</h2>
-            <p>MecZone Cameroun fonctionne en 3 étapes simples :</p>
-            <ul>
-                <li><strong>1. Signalez :</strong> Entrez les détails de votre problème de véhicule</li>
-                <li><strong>2. Analysez :</strong> Recevez un diagnostic et des conseils pratiques</li>
-                <li><strong>3. Contribuez :</strong> Aidez la communauté en enrichissant les statistiques locales</li>
-            </ul>
-            <p>Chaque signalement compte pour améliorer la fiabilité des véhicules au Cameroun !</p>
-        </div>
+  <nav class="topbar">
+    <a class="topbar-brand" href="/">
+      <img src="/static/logo.svg" alt="Logo" style="height:28px;width:auto;">
+      Mec<span>Zone</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="/" class="active">Accueil</a>
+      <a href="/report">Signaler</a>
+      <a href="/analysis">Analyse</a>
     </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-logo">
+        <img src="/static/logo.svg" alt="Logo MecZone Cameroun" />
+      </div>
+      <div class="hero-content">
+        <p class="hero-eyebrow">🇨🇲 Plateforme communautaire · Cameroun</p>
+        <h1>La santé de votre<br><em>véhicule</em>, analysée.</h1>
+        <p>Signalez votre panne, obtenez un diagnostic instantané, et contribuez aux statistiques mécaniques du pays.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="/report">🔧 Signaler une panne</a>
+          <a class="btn btn-secondary" href="/analysis">📊 Voir les statistiques</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS CHIPS -->
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="num">9</div>
+        <div class="label">Villes couvertes</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num">6</div>
+        <div class="label">Types de pannes</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num">100%</div>
+        <div class="label">Gratuit</div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">⚙️</div>
+        Comment ça marche ?
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <p><strong>Signalez</strong> votre problème de véhicule avec votre ville et votre modèle.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <p><strong>Recevez</strong> un diagnostic instantané avec causes et solutions pratiques.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <p><strong>Contribuez</strong> aux statistiques pour aider toute la communauté.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🎯</div>
+        Notre objectif
+      </div>
+      <p style="color:var(--muted);line-height:1.8;">
+        Grâce aux données collectées, MecZone établit des profils de fiabilité par marque et par ville — Douala, Yaoundé, Garoua et plus encore.
+        Nous vous indiquons quels véhicules résistent le mieux aux conditions routières et climatiques de votre région,
+        et quel modèle est le plus adapté à une utilisation sur l'ensemble du territoire.
+      </p>
+    </div>
+
+  </main>
+
 </body>
 </html>

@@ -1,32 +1,95 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Bienvenue</title>
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MecZone Cameroun — Accueil</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <div class="hero">
-            <h1>Bienvenue sur MecZone</h1>
-            <p>Un outil simple pour signaler les problèmes de véhicule, recevoir un diagnostic rapide, et consulter les tendances des signalements par ville.</p>
-            <div class="button-grid">
-                <a class="button" href="/report">Entrer des données</a>
-                <a class="button button-secondary" href="/analysis">Voir les données statistiques</a>
-            </div>
-        </div>
 
-        <div class="card">
-            <h2>À quoi sert ce site ?</h2>
-            <p>MecZone vous permet de :</p>
-            <ul>
-                <li>Décrire un problème rencontré sur votre véhicule</li>
-                <li>Obtenir une hypothèse de cause et des solutions possibles</li>
-                <li>Consulter les rapports déjà envoyés et les tendances par ville</li>
-            </ul>
-            <p>Choisissez une action pour commencer.</p>
-        </div>
+  <nav class="topbar">
+    <a class="topbar-brand" href="/">
+      <img src="/static/logo.svg" alt="Logo" style="height:28px;width:auto;">
+      Mec<span>Zone</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="/" class="active">Accueil</a>
+      <a href="/report">Signaler</a>
+      <a href="/analysis">Analyse</a>
     </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-logo">
+        <img src="/static/logo.svg" alt="Logo MecZone Cameroun" />
+      </div>
+      <div class="hero-content">
+        <p class="hero-eyebrow">🇨🇲 Plateforme communautaire · Cameroun</p>
+        <h1>La santé de votre<br><em>véhicule</em>, analysée.</h1>
+        <p>Signalez votre panne, obtenez un diagnostic instantané, et contribuez aux statistiques mécaniques du pays.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="/report">🔧 Signaler une panne</a>
+          <a class="btn btn-secondary" href="/analysis">📊 Voir les statistiques</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS CHIPS -->
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="num">9</div>
+        <div class="label">Villes couvertes</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num">6</div>
+        <div class="label">Types de pannes</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num">100%</div>
+        <div class="label">Gratuit</div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">⚙️</div>
+        Comment ça marche ?
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <p><strong>Signalez</strong> votre problème de véhicule avec votre ville et votre modèle.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <p><strong>Recevez</strong> un diagnostic instantané avec causes et solutions pratiques.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <p><strong>Contribuez</strong> aux statistiques pour aider toute la communauté.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🎯</div>
+        Notre objectif
+      </div>
+      <p style="color:var(--muted);line-height:1.8;">
+        Grâce aux données collectées, MecZone établit des profils de fiabilité par marque et par ville — Douala, Yaoundé, Garoua et plus encore.
+        Nous vous indiquons quels véhicules résistent le mieux aux conditions routières et climatiques de votre région,
+        et quel modèle est le plus adapté à une utilisation sur l'ensemble du territoire.
+      </p>
+    </div>
+
+  </main>
+
 </body>
 </html>

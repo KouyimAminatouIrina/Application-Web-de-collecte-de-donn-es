@@ -253,26 +253,184 @@ def get_brand_ranking(city=None):
     return sorted_ranking
 
 
+def _fig_to_base64(fig):
+    """Convertit une figure matplotlib en chaîne base64 PNG."""
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight',
+                facecolor='#162620', edgecolor='none', dpi=130)
+    buf.seek(0)
+    data = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    plt.close(fig)
+    return f"data:image/png;base64,{data}"
+
+
+# Palette cohérente avec le thème sombre vert/rouge Cameroun
+_COLORS = ['#007A5E', '#CE1126', '#F4C430', '#4BC8A0', '#FF6B6B',
+           '#9B59B6', '#3498DB', '#E67E22', '#1ABC9C', '#E74C3C']
+
+_STYLE = {
+    'figure.facecolor': '#162620',
+    'axes.facecolor':   '#1e2d27',
+    'axes.edgecolor':   '#2e4a3e',
+    'axes.labelcolor':  '#8fada0',
+    'xtick.color':      '#8fada0',
+    'ytick.color':      '#8fada0',
+    'text.color':       '#e8f0ec',
+    'grid.color':       '#2e4a3e',
+    'grid.linestyle':   '--',
+    'grid.alpha':       0.5,
+}
+
+
 def generate_pie_chart(distribution):
     """Génère un diagramme circulaire en base64."""
     if not distribution:
         return None
 
     labels = list(distribution.keys())
-    sizes = list(distribution.values())
+    sizes  = list(distribution.values())
 
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
-    ax.axis('equal')
+    with plt.rc_context(_STYLE):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        wedges, texts, autotexts = ax.pie(
+            sizes, labels=labels, autopct='%1.1f%%', startangle=90,
+            colors=_COLORS[:len(labels)],
+            wedgeprops=dict(linewidth=1.5, edgecolor='#162620')
+        )
+        for t in autotexts:
+            t.set_color('#fff')
+            t.set_fontsize(9)
+        ax.axis('equal')
+        ax.set_title("Répartition des types de pannes", fontsize=11, pad=12,
+                     color='#e8f0ec', fontweight='bold')
 
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png')
-    buf.seek(0)
-    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    buf.close()
-    plt.close(fig)
+    return _fig_to_base64(fig)
 
-    return f"data:image/png;base64,{image_base64}"
+
+def generate_regression_chart(reports):
+    """
+    Génère la droite de régression linéaire âge → nombre de problèmes
+    toutes marques confondues, avec nuage de points par marque.
+    """
+    if not reports:
+        return None
+
+    current_year = datetime.now().year
+    brand_ages   = {}
+
+    for r in reports:
+        if not r.get("vehicle_year"):
+            continue
+        brand = r["vehicle_model"].split()[0] if r.get("vehicle_model") else "Inconnu"
+        age   = current_year - r["vehicle_year"]
+        brand_ages.setdefault(brand, []).append(age)
+
+    if not brand_ages:
+        return None
+
+    # Construire les points (x=âge, y=nb de rapports du même véhicule ce jour)
+    xs, ys, colors_pts, labels_pts = [], [], [], []
+    brand_list = list(brand_ages.keys())
+
+    for i, brand in enumerate(brand_list):
+        ages = brand_ages[brand]
+        age_count = Counter(ages)
+        for age, cnt in age_count.items():
+            xs.append(age)
+            ys.append(cnt)
+            colors_pts.append(_COLORS[i % len(_COLORS)])
+            labels_pts.append(brand)
+
+    if len(xs) < 2:
+        return None
+
+    xs_arr = np.array(xs)
+    ys_arr = np.array(ys)
+
+    # Régression globale
+    slope, intercept = np.polyfit(xs_arr, ys_arr, 1)
+    x_line = np.linspace(xs_arr.min(), xs_arr.max(), 200)
+    y_line = slope * x_line + intercept
+
+    with plt.rc_context(_STYLE):
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.grid(True)
+
+        # Nuage de points coloré par marque
+        seen = set()
+        for x, y, c, lbl in zip(xs, ys, colors_pts, labels_pts):
+            if lbl not in seen:
+                ax.scatter(x, y, color=c, label=lbl, s=70, zorder=3, alpha=0.85)
+                seen.add(lbl)
+            else:
+                ax.scatter(x, y, color=c, s=70, zorder=3, alpha=0.85)
+
+        # Droite de régression
+        ax.plot(x_line, y_line, color='#F4C430', linewidth=2.2, zorder=4,
+                label=f'Régression : y = {slope:.2f}x + {intercept:.2f}')
+
+        ax.set_xlabel("Âge du véhicule (ans)")
+        ax.set_ylabel("Nb de signalements")
+        ax.set_title("Droite de régression âge–pannes", fontsize=11,
+                     color='#e8f0ec', fontweight='bold', pad=10)
+        ax.legend(fontsize=7, loc='upper left',
+                  facecolor='#1e2d27', edgecolor='#2e4a3e', labelcolor='#e8f0ec')
+
+    return _fig_to_base64(fig)
+
+
+def generate_boxplot_chart(reports):
+    """
+    Génère un diagramme en boîte à moustaches (boxplot) de la distribution
+    de l'âge des véhicules par marque.
+    """
+    if not reports:
+        return None
+
+    current_year = datetime.now().year
+    brand_ages = {}
+
+    for r in reports:
+        if not r.get("vehicle_year"):
+            continue
+        brand = r["vehicle_model"].split()[0] if r.get("vehicle_model") else "Inconnu"
+        age   = current_year - r["vehicle_year"]
+        brand_ages.setdefault(brand, []).append(age)
+
+    # Garder uniquement les marques avec ≥ 2 valeurs pour un boxplot significatif
+    brand_ages = {b: ages for b, ages in brand_ages.items() if len(ages) >= 2}
+
+    if not brand_ages:
+        return None
+
+    brands = sorted(brand_ages.keys())
+    data   = [brand_ages[b] for b in brands]
+    colors = [_COLORS[i % len(_COLORS)] for i in range(len(brands))]
+
+    with plt.rc_context(_STYLE):
+        fig, ax = plt.subplots(figsize=(max(5, len(brands) * 1.2 + 1), 4))
+        ax.grid(True, axis='y')
+
+        bp = ax.boxplot(data, patch_artist=True, notch=False,
+                        medianprops=dict(color='#F4C430', linewidth=2),
+                        whiskerprops=dict(color='#8fada0'),
+                        capprops=dict(color='#8fada0'),
+                        flierprops=dict(marker='o', color='#CE1126',
+                                        markerfacecolor='#CE1126', markersize=5))
+
+        for patch, color in zip(bp['boxes'], colors):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.75)
+            patch.set_edgecolor('#162620')
+
+        ax.set_xticks(range(1, len(brands) + 1))
+        ax.set_xticklabels(brands, rotation=20, ha='right', fontsize=9)
+        ax.set_ylabel("Âge du véhicule (ans)")
+        ax.set_title("Distribution de l'âge des véhicules par marque",
+                     fontsize=11, color='#e8f0ec', fontweight='bold', pad=10)
+
+    return _fig_to_base64(fig)
 
 
 def get_city_stats():
@@ -307,40 +465,60 @@ def get_city_analytics(city):
     """Retourne toutes les statistiques pour une ville."""
     distribution = get_problem_distribution(city)
     correlations = get_brand_correlations(city)
-    ranking = get_brand_ranking(city)
-    pie_chart = generate_pie_chart(distribution)
+    ranking      = get_brand_ranking(city)
+    pie_chart    = generate_pie_chart(distribution)
+
+    # Charger les rapports de la ville pour les graphiques âge
+    conn = get_db_connection()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        "SELECT vehicle_model, vehicle_year FROM reports WHERE city = %s AND vehicle_year IS NOT NULL",
+        (city,)
+    )
+    city_reports = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    regression_chart = generate_regression_chart(city_reports)
+    boxplot_chart    = generate_boxplot_chart(city_reports)
 
     return {
-        "distribution": distribution,
-        "correlations": correlations,
-        "ranking": ranking,
-        "pie_chart": pie_chart
+        "distribution":    distribution,
+        "correlations":    correlations,
+        "ranking":         ranking,
+        "pie_chart":       pie_chart,
+        "regression_chart": regression_chart,
+        "boxplot_chart":   boxplot_chart,
     }
 
 
 def get_national_analytics():
     """Retourne les statistiques nationales."""
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("SELECT problem_description FROM reports")
-    reports = cur.fetchall()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT problem_description, vehicle_model, vehicle_year FROM reports")
+    all_reports = cur.fetchall()
     cur.close()
     conn.close()
 
     distribution = {}
-    for report in reports:
+    for report in all_reports:
         problem_type = get_problem_type(report["problem_description"])
         distribution[problem_type] = distribution.get(problem_type, 0) + 1
 
-    correlations = get_brand_correlations()
-    ranking = get_brand_ranking()
-    pie_chart = generate_pie_chart(distribution)
+    correlations     = get_brand_correlations()
+    ranking          = get_brand_ranking()
+    pie_chart        = generate_pie_chart(distribution)
+    regression_chart = generate_regression_chart(all_reports)
+    boxplot_chart    = generate_boxplot_chart(all_reports)
 
     return {
-        "distribution": distribution,
-        "correlations": correlations,
-        "ranking": ranking,
-        "pie_chart": pie_chart
+        "distribution":    distribution,
+        "correlations":    correlations,
+        "ranking":         ranking,
+        "pie_chart":       pie_chart,
+        "regression_chart": regression_chart,
+        "boxplot_chart":   boxplot_chart,
     }
 
 

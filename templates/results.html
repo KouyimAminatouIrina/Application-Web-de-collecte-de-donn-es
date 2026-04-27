@@ -1,31 +1,101 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Diagnostic</title>
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MecZone — Résultat du diagnostic</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>🔧 MecZone - Diagnostic</h1>
-        <p>Merci pour votre signalement.</p>
 
-        <div class="card">
-            <h2>Résumé de votre demande</h2>
-            <p><strong>Nom :</strong> {{ name if name else 'Anonyme' }}</p>
-            <p><strong>Ville :</strong> {{ city }}</p>
-            <p><strong>Véhicule :</strong> {{ vehicle_model if vehicle_model else 'Non précisé' }}</p>
-            <p><strong>Problème :</strong> {{ problem_description }}</p>
-            <hr />
-            <p><strong>Cause probable :</strong> {{ cause }}</p>
-            <p><strong>Solutions proposées :</strong> {{ solution }}</p>
-        </div>
-
-        <div class="links">
-            <a href="/report">Entrer de nouvelles données</a>
-            <a href="/analysis">Voir l'analyse des rapports</a>
-        </div>
+  <nav class="topbar">
+    <a class="topbar-brand" href="/">
+      <img src="/static/logo.svg" alt="Logo" style="height:28px;width:auto;">
+      Mec<span>Zone</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="/">Accueil</a>
+      <a href="/report">Signaler</a>
+      <a href="/analysis">Analyse</a>
     </div>
+  </nav>
+
+  <main class="page">
+
+    <div class="result-header">
+      <div class="result-badge">🔍</div>
+      <div>
+        <h1>Diagnostic reçu</h1>
+        <p>Merci {{ name if name else 'pour votre signalement' }} — voici notre analyse.</p>
+      </div>
+    </div>
+
+    <!-- Résumé -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📋</div> Résumé du signalement</div>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="key">Conducteur</span>
+          <span class="val">{{ name if name else 'Anonyme' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="key">Ville</span>
+          <span class="val">{{ city }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="key">Véhicule</span>
+          <span class="val">{{ vehicle_model if vehicle_model else 'Non précisé' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="key">Année</span>
+          <span class="val">{{ vehicle_year if vehicle_year else '—' }}</span>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <div class="detail-item">
+          <span class="key">Problème décrit</span>
+          <span class="val" style="margin-top:0.3rem;">{{ problem_description }}</span>
+        </div>
+      </div>
+
+      <div class="diagnosis-block">
+        <div class="dx-label">⚡ Cause probable</div>
+        <p>{{ cause }}</p>
+      </div>
+
+      <div class="solution-block">
+        <div class="dx-label">✅ Solution recommandée</div>
+        <p>{{ solution }}</p>
+      </div>
+    </div>
+
+    <!-- Garages -->
+    {% if garages %}
+    <div class="card">
+      <div class="card-title"><div class="icon">🏪</div> Garages recommandés à {{ city }}</div>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1rem;">
+        Contactez l'un de ces garages pour faire réparer votre véhicule :
+      </p>
+      {% for garage in garages %}
+      <div class="garage-item">
+        <div>
+          <div class="garage-name">{{ garage.name }}</div>
+          <div class="garage-loc">📍 {{ garage.location }}</div>
+        </div>
+        <div class="garage-phone">☎️ {{ garage.phone }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="page-links">
+      <a href="/report" class="btn btn-primary">🔧 Nouveau signalement</a>
+      <a href="/analysis" class="btn btn-secondary">📊 Voir les statistiques</a>
+      <a href="/" class="btn btn-secondary">← Accueil</a>
+    </div>
+
+  </main>
+
 </body>
 </html>

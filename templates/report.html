@@ -1,39 +1,70 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Entrer un signalement</title>
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MecZone — Signaler une panne</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Entrer un signalement</h1>
-        <p>Décrivez le problème de votre véhicule pour obtenir une aide rapide.</p>
 
-        <form action="/submit" method="post">
-            <label for="name">Nom (optionnel)</label>
-            <input type="text" id="name" name="name" placeholder="Votre prénom" />
-
-            <label for="city">Ville</label>
-            <input type="text" id="city" name="city" placeholder="Ex : Paris" required />
-
-            <label for="vehicle_model">Modèle de véhicule</label>
-            <input type="text" id="vehicle_model" name="vehicle_model" placeholder="Ex : Renault Clio" />
-
-            <label for="vehicle_year">Année du véhicule</label>
-            <input type="text" id="vehicle_year" name="vehicle_year" placeholder="Ex : 2018" required />
-
-            <label for="problem_description">Description du problème</label>
-            <textarea id="problem_description" name="problem_description" rows="5" placeholder="Par exemple : Le moteur fait un bruit étrange au démarrage" required></textarea>
-
-            <button type="submit">Envoyer</button>
-        </form>
-
-        <div class="links">
-            <a href="/">Retour à l'accueil</a>
-            <a href="/analysis">Voir les statistiques</a>
-        </div>
+  <nav class="topbar">
+    <a class="topbar-brand" href="/">
+      <img src="/static/logo.svg" alt="Logo" style="height:28px;width:auto;">
+      Mec<span>Zone</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="/">Accueil</a>
+      <a href="/report" class="active">Signaler</a>
+      <a href="/analysis">Analyse</a>
     </div>
+  </nav>
+
+  <main class="page">
+
+    <h1 class="form-page-title">🔧 Signaler une panne</h1>
+    <p class="form-sub">Décrivez le problème de votre véhicule pour recevoir un diagnostic immédiat.</p>
+
+    <div class="card" style="margin-top:0;">
+      <form action="/submit" method="post">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="name">Prénom (optionnel)</label>
+            <input type="text" id="name" name="name" placeholder="Ex : Thierry" />
+          </div>
+
+          <div class="form-group">
+            <label for="city">Ville *</label>
+            <input type="text" id="city" name="city" placeholder="Ex : Douala" required />
+          </div>
+
+          <div class="form-group">
+            <label for="vehicle_model">Modèle du véhicule</label>
+            <input type="text" id="vehicle_model" name="vehicle_model" placeholder="Ex : Toyota Corolla" />
+          </div>
+
+          <div class="form-group">
+            <label for="vehicle_year">Année du véhicule *</label>
+            <input type="text" id="vehicle_year" name="vehicle_year" placeholder="Ex : 2015" required />
+          </div>
+
+          <div class="form-group full">
+            <label for="problem_description">Description du problème *</label>
+            <textarea id="problem_description" name="problem_description" rows="5"
+              placeholder="Exemple : Le moteur fait un cliquetis au démarrage et je perds de la puissance en montée." required></textarea>
+          </div>
+
+        </div>
+
+        <div class="btn-row" style="margin-top:1.5rem;">
+          <button type="submit" class="btn btn-primary">🚀 Envoyer le signalement</button>
+          <a href="/" class="btn btn-secondary">← Retour</a>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
 </body>
 </html>

@@ -1,231 +1,339 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MecZone - Analyse des rapports</title>
-    <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MecZone — Analyse statistique</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>🔧 MecZone - Analyse</h1>
-        <p>Total des rapports reçus : <strong>{{ total_reports }}</strong></p>
 
-        <div class="card">
-            <h2>Répartition par ville</h2>
-            {% if city_counts %}
-                <ul>
-                    {% for city, count in city_counts.items() %}
-                        <li><strong>{{ city }}</strong> : {{ count }} rapport(s)</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Aucun rapport n'a encore été envoyé.</p>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h2>Statistiques détaillées par ville</h2>
-            <form method="post">
-                <label for="city_select">Sélectionnez une ville :</label>
-                <select id="city_select" name="city">
-                    {% for city in cities %}
-                        <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit">Analyser</button>
-            </form>
-            
-            {% if stats %}
-                <h3>Répartition des types de pannes à {{ selected_city }}</h3>
-                {% if stats.pie_chart %}
-                    <img src="{{ stats.pie_chart }}" alt="Diagramme circulaire des pannes" style="max-width: 100%; height: auto;" />
-                {% else %}
-                    <p>Aucune donnée disponible pour cette ville.</p>
-                {% endif %}
-                
-                <h3>Corrélation âge-problèmes par marque</h3>
-                {% if stats.correlations %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Marque</th>
-                                <th>Corrélation (r)</th>
-                                <th>R²</th>
-                                <th>Nombre de véhicules</th>
-                                <th>Pente (slope)</th>
-                                <th>Ordonnée (intercept)</th>
-                                <th>Équation de régression</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for brand, data in stats.correlations.items() %}
-                                <tr>
-                                    <td>{{ brand }}</td>
-                                    <td>{{ data.r }}</td>
-                                    <td>{{ data.r2 }}</td>
-                                    <td>{{ data.count }}</td>
-                                    <td>{{ data.slope }}</td>
-                                    <td>{{ data.intercept }}</td>
-                                    <td>y = {{ data.slope }}x + {{ data.intercept }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p>Données insuffisantes pour calculer les corrélations.</p>
-                {% endif %}
-                
-                <h3>Classement des marques par fiabilité</h3>
-                {% if stats.ranking %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Marque</th>
-                                <th>Âge moyen (ans)</th>
-                                <th>Problèmes moyens</th>
-                                <th>Nombre de véhicules</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for brand, data in stats.ranking %}
-                                <tr>
-                                    <td>{{ brand }}</td>
-                                    <td>{{ data.avg_age }}</td>
-                                    <td>{{ data.avg_problems }}</td>
-                                    <td>{{ data.count }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    
-                    <h3>Interprétation</h3>
-                    <p>À {{ selected_city }}, les véhicules {{ stats.ranking[0][0] }} ont en moyenne moins de problèmes ({{ stats.ranking[0][1].avg_problems }}) que les {{ stats.ranking[-1][0] }} ({{ stats.ranking[-1][1].avg_problems }}), malgré un âge comparable ({{ stats.ranking[0][1].avg_age }} ans vs {{ stats.ranking[-1][1].avg_age }} ans). La corrélation âge-problèmes est la plus forte chez {{ stats.ranking[-1][0] }} (r={{ stats.correlations[stats.ranking[-1][0]].r if stats.correlations.get(stats.ranking[-1][0]) else 'N/A' }}), ce qui signifie que les {{ stats.ranking[-1][0] }} s'usent plus vite.</p>
-                    
-                    <h3>Conclusion</h3>
-                    <p>Les véhicules {{ stats.ranking[0][0] }} sont ceux qui rencontrent le moins de problèmes à {{ selected_city }} (moins de {{ stats.ranking[0][1].avg_problems }} panne(s) en moyenne), même avec un âge avancé. À l'inverse, les {{ stats.ranking[-1][0] }} âgées de plus de {{ stats.ranking[-1][1].avg_age }} ans concentrent le plus de signalements.</p>
-                    
-                    <h3>Notre conseil</h3>
-                    <p>Pour les habitants de {{ selected_city }}, nous recommandons d'opter pour une {{ stats.ranking[0][0] }} d'occasion plutôt qu'une {{ stats.ranking[-1][0] }} du même âge, car la fiabilité est meilleure face aux conditions routières et climatiques.</p>
-                {% else %}
-                    <p>Données insuffisantes pour le classement.</p>
-                {% endif %}
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h2>Historique des rapports</h2>
-            {% if reports %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ville</th>
-                            <th>Véhicule</th>
-                            <th>Année</th>
-                            <th>Problème</th>
-                            <th>Cause</th>
-                            <th>Solution</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for report in reports %}
-                            <tr>
-                                <td>{{ report['city'] }}</td>
-                                <td>{{ report['vehicle_model'] if report['vehicle_model'] else '-' }}</td>
-                                <td>{{ report['vehicle_year'] if report['vehicle_year'] else '-' }}</td>
-                                <td>{{ report['problem_description'] }}</td>
-                                <td>{{ report['cause'] }}</td>
-                                <td>{{ report['solution'] }}</td>
-                                <td>{{ report['created_at'][:19].replace('T', ' ') }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Aucun rapport pour le moment.</p>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h2>📊 Analyse générale - Niveau national</h2>
-            
-            <h3>Répartition des types de pannes (Tout le pays)</h3>
-            {% if national_stats.pie_chart %}
-                <img src="{{ national_stats.pie_chart }}" alt="Diagramme circulaire national" style="max-width: 100%; height: auto;" />
-            {% else %}
-                <p>Aucune donnée disponible.</p>
-            {% endif %}
-            
-            <h3>Corrélation âge-problèmes par marque (National)</h3>
-            {% if national_stats.correlations %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Marque</th>
-                            <th>Corrélation (r)</th>
-                            <th>R²</th>
-                            <th>Nombre de véhicules</th>
-                            <th>Pente (slope)</th>
-                            <th>Ordonnée (intercept)</th>
-                            <th>Équation de régression</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for brand, data in national_stats.correlations.items() %}
-                            <tr>
-                                <td>{{ brand }}</td>
-                                <td>{{ data.r }}</td>
-                                <td>{{ data.r2 }}</td>
-                                <td>{{ data.count }}</td>
-                                <td>{{ data.slope }}</td>
-                                <td>{{ data.intercept }}</td>
-                                <td>y = {{ data.slope }}x + {{ data.intercept }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Données insuffisantes pour calculer les corrélations.</p>
-            {% endif %}
-            
-            <h3>Classement des marques par fiabilité (National)</h3>
-            {% if national_stats.ranking %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Marque</th>
-                            <th>Âge moyen (ans)</th>
-                            <th>Problèmes moyens</th>
-                            <th>Nombre de véhicules</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for brand, data in national_stats.ranking %}
-                            <tr>
-                                <td>{{ brand }}</td>
-                                <td>{{ data.avg_age }}</td>
-                                <td>{{ data.avg_problems }}</td>
-                                <td>{{ data.count }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                
-                <h3>Conclusion - Classement national des marques</h3>
-                <p>Au niveau national, les véhicules {{ national_stats.ranking[0][0] }} rencontrent le moins de problèmes ({{ national_stats.ranking[0][1].avg_problems }} en moyenne), tandis que les {{ national_stats.ranking[-1][0] }} en reportent le plus ({{ national_stats.ranking[-1][1].avg_problems }} en moyenne).</p>
-                
-                <h3>Recommandation générale</h3>
-                <p>Pour une meilleure fiabilité toutes régions confondues, nous recommandons les marques {{ national_stats.ranking[0][0] }}, qui affichent une excellente tenue mécanique face aux conditions variées sur l'ensemble du territoire.</p>
-            {% else %}
-                <p>Données insuffisantes pour le classement national.</p>
-            {% endif %}
-        </div>
-
-        <div class="links">
-            <a href="/report">Entrer de nouvelles données</a>
-            <a href="/">Retour à l'accueil</a>
-        </div>
+  <nav class="topbar">
+    <a class="topbar-brand" href="/">
+      <img src="/static/logo.svg" alt="Logo" style="height:28px;width:auto;">
+      Mec<span>Zone</span>
+    </a>
+    <div class="topbar-nav">
+      <a href="/">Accueil</a>
+      <a href="/report">Signaler</a>
+      <a href="/analysis" class="active">Analyse</a>
     </div>
+  </nav>
+
+  <main class="page">
+
+    <h1 class="analysis-title">📊 Analyse statistique</h1>
+    <p style="color:var(--muted);margin-bottom:2rem;">
+      {{ total_reports }} signalement(s) enregistré(s) · données collectées auprès des conducteurs camerounais.
+    </p>
+
+    <!-- Distribution par ville -->
+    {% if city_counts %}
+    <div class="card">
+      <div class="card-title"><div class="icon">🗺️</div> Répartition par ville</div>
+      <div class="city-pills">
+        {% for city_name, count in city_counts.items() %}
+        <span class="city-pill">{{ city_name }} <span class="count">{{ count }}</span></span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== ANALYSE PAR VILLE ===== -->
+    <div class="section-label" style="margin-top:2rem;">Analyse par ville</div>
+
+    <form method="post" class="city-selector-form">
+      <div class="form-group" style="flex:1;min-width:180px;">
+        <label for="city_select">Sélectionner une ville</label>
+        <select id="city_select" name="city">
+          {% for city in cities %}
+          <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-green" style="height:fit-content;padding:0.85rem 1.4rem;">Analyser →</button>
+    </form>
+
+    {% if stats and selected_city %}
+
+      <!-- Graphiques -->
+      <div class="charts-grid">
+        {% if stats.pie_chart %}
+        <div class="chart-box">
+          <h3>🥧 Types de pannes</h3>
+          <img src="{{ stats.pie_chart }}" alt="Répartition des pannes à {{ selected_city }}" />
+        </div>
+        {% endif %}
+
+        {% if stats.regression_chart %}
+        <div class="chart-box">
+          <h3>📈 Droite de régression</h3>
+          <img src="{{ stats.regression_chart }}" alt="Droite de régression âge-problèmes" />
+        </div>
+        {% endif %}
+
+        {% if stats.boxplot_chart %}
+        <div class="chart-box" style="grid-column: 1 / -1;">
+          <h3>📦 Boîte à moustaches — Âge des véhicules par marque</h3>
+          <img src="{{ stats.boxplot_chart }}" alt="Boîte à moustaches" style="max-width:100%;height:auto;" />
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tableau corrélations -->
+      {% if stats.correlations %}
+      <div class="card">
+        <div class="card-title"><div class="icon">🔗</div> Corrélation âge–problèmes par marque · {{ selected_city }}</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Marque</th>
+                <th>r (Pearson)</th>
+                <th>R²</th>
+                <th>Pente</th>
+                <th>Ordonnée</th>
+                <th>Équation</th>
+                <th>N véhicules</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for brand, data in stats.correlations.items() %}
+              <tr>
+                <td><strong>{{ brand }}</strong></td>
+                <td>{{ data.r }}</td>
+                <td>{{ data.r2 }}</td>
+                <td>{{ data.slope }}</td>
+                <td>{{ data.intercept }}</td>
+                <td style="font-family:monospace;font-size:0.8rem;">y = {{ data.slope }}x + {{ data.intercept }}</td>
+                <td>{{ data.count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Classement fiabilité -->
+      {% if stats.ranking %}
+      <div class="card">
+        <div class="card-title"><div class="icon">🏆</div> Classement fiabilité · {{ selected_city }}</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rang</th>
+                <th>Marque</th>
+                <th>Âge moyen (ans)</th>
+                <th>Problèmes moyens</th>
+                <th>N véhicules</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for brand, data in stats.ranking %}
+              <tr>
+                <td>
+                  {% if loop.index == 1 %}<span class="rank-1">🥇 1</span>
+                  {% elif loop.index == stats.ranking|length %}<span class="rank-last">{{ loop.index }}</span>
+                  {% else %}{{ loop.index }}{% endif %}
+                </td>
+                <td><strong>{{ brand }}</strong></td>
+                <td>{{ data.avg_age }}</td>
+                <td>{{ data.avg_problems }}</td>
+                <td>{{ data.count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if stats.ranking|length >= 2 %}
+        <div class="insight">
+          <h4>💡 Interprétation · {{ selected_city }}</h4>
+          <p>
+            Les <strong>{{ stats.ranking[0][0] }}</strong> affichent en moyenne
+            <strong>{{ stats.ranking[0][1].avg_problems }}</strong> panne(s) pour un âge de
+            <strong>{{ stats.ranking[0][1].avg_age }}</strong> ans — c'est la marque la plus fiable ici.
+            À l'inverse, les <strong>{{ stats.ranking[-1][0] }}</strong>
+            ({{ stats.ranking[-1][1].avg_problems }} pannes moyennes) s'usent plus vite.
+            {% if stats.correlations.get(stats.ranking[-1][0]) %}
+            La corrélation âge–pannes est de
+            <strong>r = {{ stats.correlations[stats.ranking[-1][0]].r }}</strong>
+            pour cette marque, confirmant une dégradation accélérée avec le temps.
+            {% endif %}
+          </p>
+          <p style="margin-top:0.6rem;">
+            👉 Pour les conducteurs de <strong>{{ selected_city }}</strong>, nous recommandons
+            de privilégier une <strong>{{ stats.ranking[0][0] }}</strong> d'occasion plutôt
+            qu'une <strong>{{ stats.ranking[-1][0] }}</strong> du même âge.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    {% elif cities %}
+    <div class="empty">
+      <div class="icon">📭</div>
+      <p>Sélectionnez une ville et cliquez sur <strong>Analyser</strong> pour afficher les statistiques.</p>
+    </div>
+    {% endif %}
+
+    <!-- ===== ANALYSE NATIONALE ===== -->
+    <div class="section-label" style="margin-top:2.5rem;">Analyse nationale</div>
+
+    <div class="charts-grid">
+      {% if national_stats.pie_chart %}
+      <div class="chart-box">
+        <h3>🥧 Types de pannes (national)</h3>
+        <img src="{{ national_stats.pie_chart }}" alt="Répartition nationale des pannes" />
+      </div>
+      {% endif %}
+
+      {% if national_stats.regression_chart %}
+      <div class="chart-box">
+        <h3>📈 Droite de régression (national)</h3>
+        <img src="{{ national_stats.regression_chart }}" alt="Droite de régression nationale" />
+      </div>
+      {% endif %}
+
+      {% if national_stats.boxplot_chart %}
+      <div class="chart-box" style="grid-column: 1 / -1;">
+        <h3>📦 Boîte à moustaches nationale — Âge par marque</h3>
+        <img src="{{ national_stats.boxplot_chart }}" alt="Boîte à moustaches nationale" />
+      </div>
+      {% endif %}
+    </div>
+
+    {% if national_stats.correlations %}
+    <div class="card">
+      <div class="card-title"><div class="icon">🔗</div> Corrélation âge–problèmes · National</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Marque</th>
+              <th>r (Pearson)</th>
+              <th>R²</th>
+              <th>Pente</th>
+              <th>Ordonnée</th>
+              <th>Équation</th>
+              <th>N véhicules</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for brand, data in national_stats.correlations.items() %}
+            <tr>
+              <td><strong>{{ brand }}</strong></td>
+              <td>{{ data.r }}</td>
+              <td>{{ data.r2 }}</td>
+              <td>{{ data.slope }}</td>
+              <td>{{ data.intercept }}</td>
+              <td style="font-family:monospace;font-size:0.8rem;">y = {{ data.slope }}x + {{ data.intercept }}</td>
+              <td>{{ data.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if national_stats.ranking %}
+    <div class="card">
+      <div class="card-title"><div class="icon">🏆</div> Classement national de fiabilité</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rang</th>
+              <th>Marque</th>
+              <th>Âge moyen (ans)</th>
+              <th>Problèmes moyens</th>
+              <th>N véhicules</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for brand, data in national_stats.ranking %}
+            <tr>
+              <td>
+                {% if loop.index == 1 %}<span class="rank-1">🥇 1</span>
+                {% elif loop.index == national_stats.ranking|length %}<span class="rank-last">{{ loop.index }}</span>
+                {% else %}{{ loop.index }}{% endif %}
+              </td>
+              <td><strong>{{ brand }}</strong></td>
+              <td>{{ data.avg_age }}</td>
+              <td>{{ data.avg_problems }}</td>
+              <td>{{ data.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if national_stats.ranking|length >= 2 %}
+      <div class="insight">
+        <h4>💡 Conclusion nationale</h4>
+        <p>
+          Sur l'ensemble du territoire, les <strong>{{ national_stats.ranking[0][0] }}</strong>
+          affichent la meilleure fiabilité avec <strong>{{ national_stats.ranking[0][1].avg_problems }}</strong>
+          panne(s) moyennes. Les <strong>{{ national_stats.ranking[-1][0] }}</strong>
+          restent les moins fiables avec <strong>{{ national_stats.ranking[-1][1].avg_problems }}</strong>
+          pannes moyennes. Toutes régions confondues, nous recommandons les
+          <strong>{{ national_stats.ranking[0][0] }}</strong> pour une utilisation sur tout le pays.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Historique complet -->
+    <div class="card">
+      <div class="card-title"><div class="icon">📜</div> Historique des signalements</div>
+      {% if reports %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ville</th>
+              <th>Véhicule</th>
+              <th>Année</th>
+              <th>Problème</th>
+              <th>Cause</th>
+              <th>Solution</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in reports %}
+            <tr>
+              <td>{{ report['city'] }}</td>
+              <td>{{ report['vehicle_model'] if report['vehicle_model'] else '—' }}</td>
+              <td>{{ report['vehicle_year'] if report['vehicle_year'] else '—' }}</td>
+              <td style="max-width:180px;white-space:normal;">{{ report['problem_description'] }}</td>
+              <td style="max-width:150px;white-space:normal;">{{ report['cause'] }}</td>
+              <td style="max-width:150px;white-space:normal;">{{ report['solution'] }}</td>
+              <td style="white-space:nowrap;font-size:0.8rem;">{{ report['created_at'][:19].replace('T', ' ') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty">
+        <div class="icon">📭</div>
+        <p>Aucun signalement pour le moment. <a href="/report" style="color:var(--green);">Soyez le premier !</a></p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="page-links">
+      <a href="/report" class="btn btn-primary">🔧 Nouveau signalement</a>
+      <a href="/" class="btn btn-secondary">← Accueil</a>
+    </div>
+
+  </main>
+
 </body>
 </html>
